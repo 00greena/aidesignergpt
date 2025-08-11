@@ -1,96 +1,112 @@
-import { useState, useEffect, useRef } from 'react';
-
 export default function AIDesigner() {
-  const [state, setState] = useState({
-    messages: [],
-    uploadedFiles: [],
-    isLoading: false,
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || '',
-    showAdmin: false
-  });
+  return (
+    <div style={{
+      maxWidth: '900px',
+      margin: '0 auto',
+      padding: '20px',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '30px',
+        borderRadius: '20px',
+        textAlign: 'center',
+        marginBottom: '30px'
+      }}>
+        <h1 style={{ margin: '0 0 10px 0', fontSize: '32px' }}>
+          🎨 AI Designer GPT
+        </h1>
+        <p style={{ margin: 0, opacity: 0.9 }}>
+          Create custom products with AI-powered design assistance
+        </p>
+      </div>
 
-  const [inputValue, setInputValue] = useState('');
-  const [charCount, setCharCount] = useState(0);
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
+      <div style={{
+        background: 'white',
+        borderRadius: '20px',
+        padding: '20px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+      }}>
+        <div id="chat-messages" style={{
+          minHeight: '400px',
+          marginBottom: '20px',
+          padding: '20px',
+          background: '#f7f7f8',
+          borderRadius: '12px'
+        }}>
+          <p style={{ color: '#6b7280' }}>
+            Welcome! This AI Designer is ready to help you create amazing custom products.
+          </p>
+          <p style={{ color: '#6b7280', marginTop: '10px' }}>
+            To get started, make sure to add your OpenAI API key in Vercel's environment variables.
+          </p>
+        </div>
 
-  // API URL - will use Vercel functions in production
-  const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? '' // Same domain in production
-    : 'http://localhost:3000'; // Local development
+        <div style={{
+          display: 'flex',
+          gap: '10px'
+        }}>
+          <input
+            type="text"
+            placeholder="Describe your design idea..."
+            style={{
+              flex: 1,
+              padding: '12px 18px',
+              borderRadius: '25px',
+              border: '2px solid #e5e7eb',
+              fontSize: '16px',
+              outline: 'none'
+            }}
+            id="message-input"
+          />
+          <button
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+            onClick={() => {
+              const input = document.getElementById('message-input');
+              const messages = document.getElementById('chat-messages');
+              if (input.value.trim()) {
+                messages.innerHTML += `
+                  <div style="margin-top: 20px;">
+                    <p style="background: #7c3aed; color: white; padding: 12px 18px; border-radius: 18px; display: inline-block; max-width: 70%;">
+                      ${input.value}
+                    </p>
+                  </div>
+                  <div style="margin-top: 10px;">
+                    <p style="background: white; padding: 12px 18px; border-radius: 18px; display: inline-block; max-width: 70%;">
+                      To enable AI responses, please configure your OpenAI API key in Vercel environment variables.
+                    </p>
+                  </div>
+                `;
+                input.value = '';
+              }
+            }}
+          >
+            Send
+          </button>
+        </div>
+      </div>
 
-  useEffect(() => {
-    // Auto-scroll to bottom of messages
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [state.messages]);
-
-  // Handle textarea auto-resize
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-    }
-  }, [inputValue]);
-  const sendMessage = async () => {
-    if (!inputValue.trim() && state.uploadedFiles.length === 0) return;
-
-    const userMessage = {
-      id: Date.now(),
-      role: 'user',
-      content: inputValue,
-      files: state.uploadedFiles
-    };
-
-    setState(prev => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-      isLoading: true,
-      uploadedFiles: []
-    }));
-
-    setInputValue('');
-    setCharCount(0);
-
-    try {
-      // Call our Vercel API endpoint
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: 'You are a helpful AI design assistant for custom products.' },
-            { role: 'user', content: inputValue }
-          ],          model: 'gpt-3.5-turbo',
-          temperature: 0.8,
-          max_tokens: 500
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-
-      const data = await response.json();
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: data.choices[0].message.content
-      };
-
-      setState(prev => ({
-        ...prev,
-        messages: [...prev.messages, aiMessage],
-        isLoading: false
-      }));
-
-      // Check if we should generate an image
-      if (inputValue.toLowerCase().includes('design') || 
-          inputValue.toLowerCase().includes('create') ||
-          inputValue.toLowerCase().includes('image')) {
-        await generateImage(inputValue);
-      }
-
-    } catch (error) {
-      console.error('Error:', error);
+      <div style={{
+        marginTop: '20px',
+        padding: '20px',
+        background: '#fef3c7',
+        borderRadius: '12px',
+        border: '1px solid #fbbf24'
+      }}>
+        <h3 style={{ margin: '0 0 10px 0', color: '#92400e' }}>⚙️ Setup Required</h3>
+        <p style={{ margin: '0', color: '#78350f' }}>
+          To enable AI features, add your <strong>OPENAI_API_KEY</strong> in Vercel's environment variables and redeploy.
+        </p>
+      </div>
+    </div>
+  );
+}
