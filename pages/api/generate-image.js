@@ -1,13 +1,10 @@
-// API endpoint for DALL-E Image Generation
+// API endpoint for DALL-E Image Generation using Vercel AI Gateway
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -27,14 +24,12 @@ export default async function handler(req, res) {
       n = 1 
     } = req.body;
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    // Use Vercel AI Gateway for image generation
+    const response = await fetch('https://gateway.vercel.app/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${process.env.VERCEL_AI_GATEWAY_API_KEY}`,
       },
       body: JSON.stringify({
         model,
@@ -47,9 +42,12 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('DALL-E API Error:', errorData);
-      return res.status(response.status).json({ error: errorData.error?.message || 'DALL-E API error' });
+      const errorText = await response.text();
+      console.error('Vercel AI Gateway Image Error:', errorText);
+      return res.status(response.status).json({ 
+        error: 'AI Gateway image error', 
+        details: errorText 
+      });
     }
 
     const data = await response.json();
@@ -57,6 +55,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('API Route Error:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message 
+    });
   }
 }

@@ -1,14 +1,22 @@
 {
   "name": "ai-designer-gpt",
   "version": "1.0.0",
+  "description": "AI-powered custom product designer with Vercel AI Gateway",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "14.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@vercel/ai": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "20.8.7",
+    "@types/react": "18.2.31",
+    "typescript": "5.2.2"
   }
 }
