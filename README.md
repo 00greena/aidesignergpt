@@ -30,7 +30,7 @@ STRIPE_SECRET_KEY=your_stripe_secret_key
 
 Deploy to Vercel with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/ai-designer-gpt)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/00greena/aidesignergpt)
 
 ## Tech Stack
 
@@ -40,3 +40,7 @@ Deploy to Vercel with one click:
 - Stripe API
 - TypeScript
 - Vercel Edge Functions
+
+## Created by
+
+Built with ❤️ for custom product design automation
