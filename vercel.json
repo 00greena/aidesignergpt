@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "pages/api/chat.js": {
+      "maxDuration": 30
+    },
+    "pages/api/generate-image.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key",
+    "STRIPE_PUBLIC_KEY": "@stripe-public-key",
+    "STRIPE_SECRET_KEY": "@stripe-secret-key"
+  }
+}
