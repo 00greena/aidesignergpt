@@ -1,4 +1,4 @@
-// API endpoint for DALL-E Image Generation using Vercel AI Gateway
+// API endpoint for image generation using Vercel AI Gateway
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -24,12 +24,20 @@ export default async function handler(req, res) {
       n = 1 
     } = req.body;
 
-    // Use Vercel AI Gateway for image generation
+    const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY;
+    
+    if (!AI_GATEWAY_API_KEY) {
+      return res.status(400).json({ 
+        error: 'AI Gateway API key not configured.' 
+      });
+    }
+
+    // Vercel AI Gateway endpoint for image generation
     const response = await fetch('https://gateway.vercel.app/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.VERCEL_AI_GATEWAY_API_KEY}`,
+        'Authorization': `Bearer ${AI_GATEWAY_API_KEY}`
       },
       body: JSON.stringify({
         model,
@@ -42,11 +50,10 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Vercel AI Gateway Image Error:', errorText);
+      const errorData = await response.json();
+      console.error('AI Gateway Image Error:', errorData);
       return res.status(response.status).json({ 
-        error: 'AI Gateway image error', 
-        details: errorText 
+        error: errorData.error?.message || 'AI Gateway image generation error' 
       });
     }
 

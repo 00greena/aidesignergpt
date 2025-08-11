@@ -1,5 +1,16 @@
-// API endpoint using Vercel AI SDK
+// API endpoint using Vercel AI Gateway
 export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -7,69 +18,47 @@ export default async function handler(req, res) {
   try {
     const { messages, model = 'gpt-3.5-turbo', temperature = 0.8, max_tokens = 500 } = req.body;
     
-    // Try multiple methods to get the API key
-    const apiKey = process.env.OPENAI_API_KEY || 
-                   process.env.VERCEL_AI_GATEWAY_API_KEY ||
-                   process.env.AI_GATEWAY_API_KEY;
+    // Use Vercel AI Gateway
+    const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY;
     
-    if (!apiKey) {
-      // If no API key, try direct gateway without auth (if configured in Vercel dashboard)
-      const gatewayUrl = process.env.VERCEL_AI_GATEWAY_URL || 'https://gateway.vercel.app';
-      
-      const response = await fetch(`${gatewayUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          max_tokens,
-        })
+    if (!AI_GATEWAY_API_KEY) {
+      return res.status(400).json({ 
+        error: 'AI Gateway API key not configured. Please add AI_GATEWAY_API_KEY to environment variables.' 
       });
-
-      if (!response.ok) {
-        // Fallback response if gateway fails
-        return res.status(200).json({
-          choices: [{
-            message: {
-              content: 'Please ensure AI Gateway is configured in Vercel project settings.'
-            }
-          }]
-        });
-      }
-
-      const data = await response.json();
-      return res.status(200).json(data);
     }
-    
-    // If API key exists, use standard OpenAI endpoint
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+
+    // Vercel AI Gateway endpoint
+    const response = await fetch('https://gateway.vercel.app/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${AI_GATEWAY_API_KEY}`
       },
       body: JSON.stringify({
         model,
         messages,
         temperature,
-        max_tokens,
+        max_tokens
       })
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('AI Gateway Error:', errorData);
+      return res.status(response.status).json({ 
+        error: errorData.error?.message || 'AI Gateway error',
+        details: errorData 
+      });
+    }
 
     const data = await response.json();
     return res.status(200).json(data);
 
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(200).json({
-      choices: [{
-        message: {
-          content: 'Connection error. Please check your configuration.'
-        }
-      }]
+    console.error('API Route Error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message 
     });
   }
 }
