@@ -21,16 +21,22 @@ export default async function handler(req, res) {
   try {
     const { messages, model = 'gpt-3.5-turbo', temperature = 0.8, max_tokens = 500 } = req.body;
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    // Check for API key in environment or request
+    const apiKey = process.env.OPENAI_API_KEY || req.body.apiKey;
+    
+    if (!apiKey) {
+      return res.status(400).json({ 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables in Vercel.' 
+      });
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },      body: JSON.stringify({
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
         model,
         messages,
         temperature,
